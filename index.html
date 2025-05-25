@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#2563eb" />
+    <meta name="description" content="Mathematische Kreuzworträtsel zum Knobeln" />
+    
+    <!-- PWA Meta Tags -->
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="mask-icon" href="/mask-icon.svg" color="#2563eb" />
+    
+    <title>Zahlen Kreuzworträtsel</title>
+    
+    <!-- Preload kritische Ressourcen -->
+    <link rel="preload" href="/src/main.ts" as="script" type="module" />
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="game-header">
+            <div class="header-content">
+                <h1 class="game-title">🧮 Zahlen-Rätsel</h1>
+                <div class="game-stats">
+                    <div class="stat">
+                        <span class="stat-label">Zeit:</span>
+                        <span id="timer" class="stat-value">00:00</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Punkte:</span>
+                        <span id="score" class="stat-value">0</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Hauptspielbereich -->
+        <main class="game-main">
+            <!-- Schwierigkeitsauswahl -->
+            <div id="difficulty-selector" class="difficulty-panel">
+                <h2>Wähle deine Herausforderung</h2>
+                <div class="difficulty-buttons">
+                    <button class="difficulty-btn" data-level="easy">
+                        <span class="difficulty-name">Einfach</span>
+                        <span class="difficulty-desc">10 Gleichungen</span>
+                    </button>
+                    <button class="difficulty-btn" data-level="medium">
+                        <span class="difficulty-name">Mittel</span>
+                        <span class="difficulty-desc">15 Gleichungen</span>
+                    </button>
+                    <button class="difficulty-btn" data-level="hard">
+                        <span class="difficulty-name">Schwer</span>
+                        <span class="difficulty-desc">20 Gleichungen</span>
+                    </button>
+                    <button class="difficulty-btn" data-level="epic">
+                        <span class="difficulty-name">Episch</span>
+                        <span class="difficulty-desc">25 Gleichungen</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Spielfeld -->
+            <div id="game-area" class="game-area hidden">
+                <div class="game-board-container">
+                    <canvas id="game-board" class="game-board"></canvas>
+                    <div id="game-overlay" class="game-overlay"></div>
+                </div>
+                
+                <!-- Zahlen-Hand -->
+                <div class="number-hand">
+                    <h3>Verfügbare Zahlen</h3>
+                    <div id="number-tiles" class="number-tiles"></div>
+                </div>
+            </div>
+
+            <!-- Spiel-Controls -->
+            <div id="game-controls" class="game-controls hidden">
+                <button id="hint-btn" class="control-btn">💡 Tipp</button>
+                <button id="undo-btn" class="control-btn">↶ Rückgängig</button>
+                <button id="check-btn" class="control-btn primary">✓ Prüfen</button>
+                <button id="new-game-btn" class="control-btn">🎮 Neues Spiel</button>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="game-footer">
+            <p>&copy; 2025 Zahlen-Kreuzworträtsel PWA</p>
+        </footer>
+    </div>
+
+    <!-- Loading Screen -->
+    <div id="loading" class="loading-screen">
+        <div class="loading-spinner"></div>
+        <p>Rätsel wird generiert...</p>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="success-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>🎉 Geschafft!</h2>
+            <p id="success-message">Herzlichen Glückwunsch!</p>
+            <div class="modal-buttons">
+                <button id="next-level-btn" class="btn primary">Nächstes Level</button>
+                <button id="menu-btn" class="btn">Hauptmenü</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
