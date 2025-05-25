@@ -13,7 +13,7 @@ import {
     EventHandler,
     DIFFICULTY_CONFIG,
     SCORING 
-  } from '@/types/game';
+  } from '../types/game';
   import { PuzzleGenerator } from './PuzzleGenerator';
   
   export class GameEngine {

@@ -6,7 +6,7 @@ import {
     Position, 
     Operation,
     DIFFICULTY_CONFIG 
-  } from '@/types/game';
+  } from '../types/game';
   
   export class PuzzleGenerator {
     private gridSize: { width: number; height: number };

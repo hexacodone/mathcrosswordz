@@ -1,4 +1,4 @@
-import { DragState, Point, NumberTile } from '@/types/game';
+import { DragState, Point, NumberTile } from '../types/game';
 
 export class DragDropManager {
   private dragState: DragState = {

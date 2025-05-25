@@ -1,4 +1,4 @@
-import { GameBoard as GameBoardData, CellData, Equation, Point, CELL_SIZE, CELL_PADDING, GRID_PADDING } from '@/types/game';
+import { GameBoard as GameBoardData, CellData, Equation, Point, CELL_SIZE, CELL_PADDING, GRID_PADDING } from '../types/game';
 
 export class GameBoard {
   private canvas: HTMLCanvasElement | null = null;
