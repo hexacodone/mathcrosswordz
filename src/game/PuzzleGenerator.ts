@@ -24,22 +24,36 @@ import {
     generatePuzzle(): GameBoard {
       this.reset();
       
-      // Generate equations with different strategies
-      this.generateHorizontalEquations();
-      this.generateVerticalEquations();
-      this.addIntersectionChallenges();
-      
-      // Ensure we have enough equations
-      while (this.equations.length < this.equationCount) {
-        this.addRandomEquation();
-      }
+      try {
+        // Generate equations with different strategies
+        this.generateHorizontalEquations();
+        this.generateVerticalEquations();
+        
+        // If we don't have enough equations, add simpler ones
+        let attempts = 0;
+        while (this.equations.length < this.equationCount && attempts < 50) {
+          this.addRandomEquation();
+          attempts++;
+        }
   
-      // Create final board
-      return {
-        cells: this.cells,
-        equations: new Map(this.equations.map(eq => [eq.id, eq])),
-        gridSize: this.gridSize
-      };
+        // If still not enough, fill with simple equations
+        if (this.equations.length < this.equationCount) {
+          this.fillWithSimpleEquations();
+        }
+  
+        console.log(`Generated ${this.equations.length} equations for ${this.equationCount} target`);
+  
+        // Create final board
+        return {
+          cells: this.cells,
+          equations: new Map(this.equations.map(eq => [eq.id, eq])),
+          gridSize: this.gridSize
+        };
+      } catch (error) {
+        console.error('Error generating puzzle:', error);
+        // Fallback: create a simple puzzle
+        return this.createFallbackPuzzle();
+      }
     }
   
     private reset(): void {
@@ -64,11 +78,11 @@ import {
     }
   
     private generateHorizontalEquations(): void {
-      const targetCount = Math.ceil(this.equationCount * 0.6); // 60% horizontal
+      const targetCount = Math.min(Math.ceil(this.equationCount * 0.6), Math.floor(this.gridSize.height * 0.8));
       let attempts = 0;
       
-      while (this.equations.filter(eq => eq.isHorizontal).length < targetCount && attempts < 100) {
-        const startX = Math.floor(Math.random() * (this.gridSize.width - 6)); // Min 7 cells for equation
+      while (this.equations.filter(eq => eq.isHorizontal).length < targetCount && attempts < 50) {
+        const startX = Math.floor(Math.random() * Math.max(1, this.gridSize.width - 4)); // Min 5 cells
         const startY = Math.floor(Math.random() * this.gridSize.height);
         
         if (this.canPlaceHorizontalEquation(startX, startY)) {
@@ -79,12 +93,12 @@ import {
     }
   
     private generateVerticalEquations(): void {
-      const targetCount = Math.ceil(this.equationCount * 0.4); // 40% vertical
+      const targetCount = Math.min(Math.ceil(this.equationCount * 0.4), Math.floor(this.gridSize.width * 0.8));
       let attempts = 0;
       
-      while (this.equations.filter(eq => !eq.isHorizontal).length < targetCount && attempts < 100) {
+      while (this.equations.filter(eq => !eq.isHorizontal).length < targetCount && attempts < 50) {
         const startX = Math.floor(Math.random() * this.gridSize.width);
-        const startY = Math.floor(Math.random() * (this.gridSize.height - 6));
+        const startY = Math.floor(Math.random() * Math.max(1, this.gridSize.height - 4));
         
         if (this.canPlaceVerticalEquation(startX, startY)) {
           this.createVerticalEquation(startX, startY);
@@ -94,8 +108,8 @@ import {
     }
   
     private canPlaceHorizontalEquation(startX: number, startY: number): boolean {
-      // Check if 7 consecutive cells are available
-      for (let i = 0; i < 7; i++) {
+      // Check if 5 consecutive cells are available (simplified)
+      for (let i = 0; i < 5; i++) {
         if (startX + i >= this.gridSize.width) return false;
         if (this.usedPositions.has(`${startX + i}-${startY}`)) return false;
       }
@@ -103,8 +117,8 @@ import {
     }
   
     private canPlaceVerticalEquation(startX: number, startY: number): boolean {
-      // Check if 7 consecutive cells are available
-      for (let i = 0; i < 7; i++) {
+      // Check if 5 consecutive cells are available (simplified)
+      for (let i = 0; i < 5; i++) {
         if (startY + i >= this.gridSize.height) return false;
         if (this.usedPositions.has(`${startX}-${startY + i}`)) return false;
       }
@@ -353,5 +367,120 @@ import {
         [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
       }
       return shuffled;
+    }
+  
+    // Fallback puzzle for when generation fails
+    private createFallbackPuzzle(): GameBoard {
+      this.reset();
+      
+      // Create a few simple horizontal equations
+      const simpleEquations = [
+        { x: 1, y: 1, eq: "2 + 3 = 5" },
+        { x: 1, y: 3, eq: "4 - 1 = 3" },
+        { x: 1, y: 5, eq: "3 * 2 = 6" }
+      ];
+  
+      simpleEquations.forEach(({ x, y, eq }, index) => {
+        if (y < this.gridSize.height && x + 4 < this.gridSize.width) {
+          this.createSimpleEquation(x, y, eq, `fallback-${index}`);
+        }
+      });
+  
+      return {
+        cells: this.cells,
+        equations: new Map(this.equations.map(eq => [eq.id, eq])),
+        gridSize: this.gridSize
+      };
+    }
+  
+    private createSimpleEquation(startX: number, startY: number, expression: string, id: string): void {
+      const parts = expression.split(' ');
+      const num1 = parseInt(parts[0]);
+      const op = parts[1];
+      const num2 = parseInt(parts[2]);
+      const result = parseInt(parts[4]);
+  
+      const positions = [
+        { x: startX, y: startY, type: 'number', value: null, isFixed: false },
+        { x: startX + 1, y: startY, type: 'operator', value: op, isFixed: true },
+        { x: startX + 2, y: startY, type: 'number', value: null, isFixed: false },
+        { x: startX + 3, y: startY, type: 'equals', value: '=', isFixed: true },
+        { x: startX + 4, y: startY, type: 'number', value: null, isFixed: false },
+      ];
+  
+      // Sometimes fix one number as hint
+      const hintIndex = Math.random() < 0.5 ? Math.floor(Math.random() * 3) : -1;
+      if (hintIndex === 0) positions[0].value = num1, positions[0].isFixed = true;
+      if (hintIndex === 1) positions[2].value = num2, positions[2].isFixed = true;
+      if (hintIndex === 2) positions[4].value = result, positions[4].isFixed = true;
+  
+      const cellIds: string[] = [];
+      positions.forEach(pos => {
+        const cellId = `${pos.x}-${pos.y}`;
+        cellIds.push(cellId);
+        this.usedPositions.add(`${pos.x}-${pos.y}`);
+        
+        const cell = this.cells.get(cellId)!;
+        cell.type = pos.type as any;
+        cell.value = pos.value;
+        cell.isFixed = pos.isFixed;
+        cell.belongsToEquation.push(id);
+      });
+  
+      const equation: Equation = {
+        id,
+        cells: cellIds,
+        expression,
+        result,
+        isHorizontal: true,
+        startPosition: { x: startX, y: startY },
+        isComplete: false,
+        isValid: false
+      };
+  
+      this.equations.push(equation);
+    }
+  
+    private fillWithSimpleEquations(): void {
+      const needed = this.equationCount - this.equations.length;
+      console.log(`Filling ${needed} missing equations with simple ones`);
+      
+      for (let i = 0; i < needed; i++) {
+        const operations = ['+', '-', '*'];
+        const op = operations[Math.floor(Math.random() * operations.length)];
+        
+        let num1: number, num2: number, result: number;
+        
+        switch (op) {
+          case '+':
+            num1 = Math.floor(Math.random() * 10) + 1;
+            num2 = Math.floor(Math.random() * 10) + 1;
+            result = num1 + num2;
+            break;
+          case '-':
+            result = Math.floor(Math.random() * 15) + 1;
+            num2 = Math.floor(Math.random() * result) + 1;
+            num1 = result + num2;
+            break;
+          case '*':
+            num1 = Math.floor(Math.random() * 5) + 1;
+            num2 = Math.floor(Math.random() * 5) + 1;
+            result = num1 * num2;
+            break;
+          default:
+            num1 = 2; num2 = 3; result = 5;
+        }
+  
+        // Try to place this equation
+        for (let attempts = 0; attempts < 20; attempts++) {
+          const startX = Math.floor(Math.random() * Math.max(1, this.gridSize.width - 4));
+          const startY = Math.floor(Math.random() * this.gridSize.height);
+          
+          if (this.canPlaceHorizontalEquation(startX, startY)) {
+            this.createSimpleEquation(startX, startY, `${num1} ${op} ${num2} = ${result}`, `simple-${i}`);
+            break;
+          }
+        }
+      }
     }
   }
